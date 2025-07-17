@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+  {% if modo == 'admin' %}
+    <h2>Todos os Agendamentos</h2>
+  {% else %}
+    <h2>Meus Agendamentos</h2>
+  {% endif %}
+
+  {% if modo == 'meus' %}
+    <div class="mb-3">
+      <a href="?status=futuros" class="btn btn-outline-primary btn-sm">Futuros</a>
+      <a href="?status=realizados" class="btn btn-outline-success btn-sm">Realizados</a>
+      <a href="?status=cancelados" class="btn btn-outline-secondary btn-sm">Cancelados</a>
+    </div>
+  {% endif %}
+
+  <table class="table table-striped">
+    <tr>
+      {% if modo == 'admin' %}<th>Usuário</th>{% endif %}
+      <th>Sala</th>
+      <th>Data</th>
+      <th>Início</th>
+      <th>Fim</th>
+      <th>Ações</th>
+    </tr>
+    {% for agendamento in agendamentos %}
+      <tr>
+        {% if modo == 'admin' %}<td>{{ agendamento.criador.get_full_name }}</td>{% endif %}
+        <td>{{ agendamento.sala.nome }}</td>
+        <td>{{ agendamento.data }}</td>
+        <td>{{ agendamento.hora_inicio }}</td>
+        <td>{{ agendamento.hora_fim }}</td>
+        <td>
+          {% if modo == 'meus' %}
+            <a href="{% url 'agenda:cancelar_agendamento' agendamento.pk %}" class="btn btn-danger btn-sm">Cancelar</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6">Nenhum agendamento encontrado.</td></tr>
+    {% endfor %}
+  </table>
+{% endblock %}

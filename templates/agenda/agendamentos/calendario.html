@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Calendário - {{ sala.nome }}{% endblock %}
+
+{% block content %}
+<h2>Calendário - {{ sala.nome }}</h2>
+<h4>{{ mes_nome }} de {{ ano }}</h4>
+
+<div class="d-flex justify-content-between my-3">
+  <a class="btn btn-outline-secondary" href="{% url 'agenda:calendario_sala_mes' sala.id anterior.0 anterior.1 %}">&laquo; Mês anterior</a>
+  <a class="btn btn-outline-secondary" href="{% url 'agenda:calendario_sala_mes' sala.id proximo.0 proximo.1 %}">Próximo mês &raquo;</a>
+</div>
+
+<table class="table table-bordered text-center">
+  <thead>
+    <tr>
+      <th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for semana in semanas %}
+    <tr>
+      {% for dia in semana %}
+      <td class="{% if not dia.mes_atual %}text-muted{% endif %} {% if dia.tem_agendamento %}bg-warning{% endif %}">
+        {% if dia.mes_atual %}
+          <a href="{% url 'agenda:detalhes_dia' sala.id dia.dia|date:'Y-m-d' %}" class="text-decoration-none">
+            {{ dia.dia.day }}
+          </a>
+        {% else %}
+          {{ dia.dia.day }}
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

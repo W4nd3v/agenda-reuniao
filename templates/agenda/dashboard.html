@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4">Salas disponíveis</h2>
+<div class="row">
+  {% for sala in salas %}
+  <div class="col-md-4 mb-3">
+    <a href="{% url 'agenda:calendario_sala' sala.id %}" class="btn btn-outline-primary w-100">
+      {{ sala.nome }}<br><small>{{ sala.localizacao }}</small>
+    </a>
+  </div>
+  {% empty %}
+  <p>Nenhuma sala cadastrada.</p>
+  {% endfor %}
+</div>
+{% endblock %}

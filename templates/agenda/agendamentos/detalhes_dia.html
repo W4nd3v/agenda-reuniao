@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Agendamentos - {{ sala.nome }}{% endblock %}
+
+{% block content %}
+<h2>Agendamentos em {{ data|date:'d/m/Y' }} - {{ sala.nome }}</h2>
+
+<div class="d-flex justify-content-between mb-3">
+  <a href="{% url 'agenda:calendario_sala' sala.id %}" class="btn btn-secondary">Voltar ao calendário</a>
+  <a href="{% url 'agenda:novo_agendamento' %}?sala={{ sala.id }}&data={{ data|date:'Y-m-d' }}&hora_inicio=14:00&hora_fim=15:00" class="btn btn-success">
+    Novo Agendamento
+  </a>
+</div>
+
+{% if agendamentos %}
+  <table class="table table-striped">
+    <thead>
+      <tr><th>Horário</th><th>Responsável</th></tr>
+    </thead>
+    <tbody>
+      {% for ag in agendamentos %}
+        <tr class="{% if ag.esta_no_passado %}text-muted{% endif %}">
+          <td>{{ ag.obj.hora_inicio }} - {{ ag.obj.hora_fim }}</td>
+          <td>{{ ag.obj.criador.get_full_name }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>
+{% else %}
+  <div class="alert alert-info">Nenhum agendamento para esta data.</div>
+{% endif %}
+{% endblock %}

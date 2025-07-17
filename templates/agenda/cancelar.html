@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h3>Tem certeza que deseja cancelar este agendamento?</h3>
+  <p>{{ agendamento }}</p>
+  <form method="post">{% csrf_token %}
+    <button type="submit" class="btn btn-danger">Sim, Cancelar</button>
+    <a href="{% url 'agenda:meus_agendamentos' %}" class="btn btn-secondary">Voltar</a>
+  </form>
+{% endblock %}
