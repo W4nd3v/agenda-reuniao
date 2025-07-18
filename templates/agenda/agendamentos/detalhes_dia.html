@@ -2,6 +2,28 @@
 {% block title %}Agendamentos - {{ sala.nome }}{% endblock %}
 
 {% block content %}
+<h4 class="mt-4">Horários sugeridos</h4>
+<div class="row row-cols-2 row-cols-md-4 g-3">
+  {% for b in blocos %}
+    <div class="col">
+      {% if b.passado %}
+        <div class="btn btn-secondary w-100 disabled">
+          {{ b.inicio }} - {{ b.fim }}<br><small>Passado</small>
+        </div>
+      {% elif b.ocupado %}
+        <div class="btn btn-danger w-100 disabled">
+          {{ b.inicio }} - {{ b.fim }}<br><small>Ocupado</small>
+        </div>
+      {% else %}
+        <a class="btn btn-outline-success w-100"
+           href="{% url 'agenda:novo_agendamento' %}?sala={{ sala.id }}&data={{ data|date:'Y-m-d' }}&hora_inicio={{ b.inicio }}&hora_fim={{ b.fim }}">
+          {{ b.inicio }} - {{ b.fim }}<br><small>Agendar</small>
+        </a>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
 <h2>Agendamentos em {{ data|date:'d/m/Y' }} - {{ sala.nome }}</h2>
 
 <div class="d-flex justify-content-between mb-3">

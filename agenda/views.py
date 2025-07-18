@@ -8,9 +8,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 import calendar
-from datetime import date, datetime
+from datetime import date, datetime, timedelta,time
 from django.utils.dateparse import parse_date, parse_time
-from django.utils.timezone import now
+from django.utils.timezone import now, localtime
 
 @login_required
 def detalhes_dia(request, sala_id, data):
@@ -21,14 +21,40 @@ def detalhes_dia(request, sala_id, data):
         messages.error(request, 'Data inválida.')
         return redirect('agenda:dashboard')
 
+    agora = timezone.localtime()
     agendamentos = Agendamento.objects.filter(sala=sala, data=data_obj).order_by('hora_inicio')
-    agora = now()
+
+    agendamentos_ocupados = [(ag.hora_inicio, ag.hora_fim) for ag in agendamentos]
+
+    # Gera horários sugeridos de 30 em 30 minutos
+    blocos = []
+    inicio = time(8, 0)
+    fim = time(18, 0)
+    hora = datetime.combine(data_obj, inicio)
+
+    while hora.time() < fim:
+        hora_inicio = hora.time()
+        hora_fim = (hora + timedelta(minutes=30)).time()
+
+        ocupado = any(
+            h_ini < hora_fim and h_fim > hora_inicio
+            for h_ini, h_fim in agendamentos_ocupados
+        )
+        esta_no_passado = datetime.combine(data_obj, hora_inicio) < agora.replace(tzinfo=None)
+
+        blocos.append({
+            'inicio': hora_inicio.strftime('%H:%M'),
+            'fim': hora_fim.strftime('%H:%M'),
+            'ocupado': ocupado,
+            'passado': esta_no_passado
+        })
+        hora += timedelta(minutes=30)
 
     return render(request, 'agenda/agendamentos/detalhes_dia.html', {
         'sala': sala,
         'data': data_obj,
         'agendamentos': agendamentos,
-        'agora': agora
+        'blocos': blocos
     })
 
 
@@ -85,9 +111,9 @@ TECNICOS_EMAILS = [
 @login_required
 def novo_agendamento(request):
     sala_id = request.GET.get('sala')
-    data_raw = request.GET.get('data')  # ex: "2025-07-18"
-    hora_inicio_raw = request.GET.get('hora_inicio')  # ex: "14:00"
-    hora_fim_raw = request.GET.get('hora_fim')  # ex: "15:30"
+    data_raw = request.GET.get('data')
+    hora_inicio_raw = request.GET.get('hora_inicio')
+    hora_fim_raw = request.GET.get('hora_fim')
 
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
@@ -98,20 +124,38 @@ def novo_agendamento(request):
             return redirect('agenda:meus_agendamentos')
     else:
         inicial = {}
+
         if sala_id:
             inicial['sala'] = sala_id
+
         if data_raw:
             data_formatada = parse_date(data_raw)
             if data_formatada:
                 inicial['data'] = data_formatada
+
         if hora_inicio_raw:
             hora_ini = parse_time(hora_inicio_raw)
             if hora_ini:
                 inicial['hora_inicio'] = hora_ini
+        else:
+            # Definir hora atual arredondada para o próximo bloco de 30 minutos
+            agora = localtime(now())
+            minutos = (agora.minute // 30 + 1) * 30
+            if minutos == 60:
+                hora = agora.replace(minute=0, second=0) + timedelta(hours=1)
+            else:
+                hora = agora.replace(minute=30 if minutos == 30 else 0, second=0)
+            inicial['hora_inicio'] = hora.time()
+
         if hora_fim_raw:
             hora_fim = parse_time(hora_fim_raw)
             if hora_fim:
                 inicial['hora_fim'] = hora_fim
+        else:
+            # Definir hora_fim como 1h após hora_inicio
+            if 'hora_inicio' in inicial:
+                hora_fim_padrao = (datetime.combine(datetime.today(), inicial['hora_inicio']) + timedelta(hours=1)).time()
+                inicial['hora_fim'] = hora_fim_padrao
 
         form = AgendamentoForm(initial=inicial)
 
